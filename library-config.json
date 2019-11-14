@@ -1,0 +1,96 @@
+{
+    "libraries": {
+        "133155": {
+            "genome": [
+                "hg19"
+            ],
+            "readgroups": {
+                "133155_a": {
+                    "1": "/lab/work/porchard/data/fastq/133155_a.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133155_a.2.fastq.gz"
+                },
+                "133155_b": {
+                    "1": "/lab/work/porchard/data/fastq/133155_b.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133155_b.2.fastq.gz"
+                },
+                "133155_c": {
+                    "1": "/lab/work/porchard/data/fastq/133155_c.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133155_c.2.fastq.gz"
+                },
+                "133155_d": {
+                    "1": "/lab/work/porchard/data/fastq/133155_d.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133155_d.2.fastq.gz"
+                }
+            }
+        },
+        "133156": {
+            "genome": [
+                "hg19"
+            ],
+            "readgroups": {
+                "133156_a": {
+                    "1": "/lab/work/porchard/data/fastq/133156_a.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133156_a.2.fastq.gz"
+                },
+                "133156_b": {
+                    "1": "/lab/work/porchard/data/fastq/133156_b.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133156_b.2.fastq.gz"
+                },
+                "133156_c": {
+                    "1": "/lab/work/porchard/data/fastq/133156_c.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133156_c.2.fastq.gz"
+                },
+                "133156_d": {
+                    "1": "/lab/work/porchard/data/fastq/133156_d.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133156_d.2.fastq.gz"
+                }
+            }
+        },
+        "133157": {
+            "genome": [
+                "hg19"
+            ],
+            "readgroups": {
+                "133157_a": {
+                    "1": "/lab/work/porchard/data/fastq/133157_a.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133157_a.2.fastq.gz"
+                },
+                "133157_b": {
+                    "1": "/lab/work/porchard/data/fastq/133157_b.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133157_b.2.fastq.gz"
+                },
+                "133157_c": {
+                    "1": "/lab/work/porchard/data/fastq/133157_c.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133157_c.2.fastq.gz"
+                },
+                "133157_d": {
+                    "1": "/lab/work/porchard/data/fastq/133157_d.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133157_d.2.fastq.gz"
+                }
+            }
+        },
+        "133158": {
+            "genome": [
+                "hg19"
+            ],
+            "readgroups": {
+                "133158_a": {
+                    "1": "/lab/work/porchard/data/fastq/133158_a.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133158_a.2.fastq.gz"
+                },
+                "133158_b": {
+                    "1": "/lab/work/porchard/data/fastq/133158_b.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133158_b.2.fastq.gz"
+                },
+                "133158_c": {
+                    "1": "/lab/work/porchard/data/fastq/133158_c.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133158_c.2.fastq.gz"
+                },
+                "133158_d": {
+                    "1": "/lab/work/porchard/data/fastq/133158_d.1.fastq.gz",
+                    "2": "/lab/work/porchard/data/fastq/133158_d.2.fastq.gz"
+                }
+            }
+        }
+    }
+}
