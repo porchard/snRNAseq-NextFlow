@@ -67,10 +67,12 @@ process starsolo {
 	set val(library), file("Aligned.sortedByCoord.out.bam"), file("Log.final.out"), file("Log.out"), file("Log.progress.out"), file("SJ.out.tab"), file("Solo.out")
 	set val(library), val(genome), file("Aligned.sortedByCoord.out.bam") into feature_counts_in
 	set val(library), val(genome), file("Aligned.sortedByCoord.out.bam") into prune_in
-	
+
+	script:
+	soloUMIlen = params.chemistry == 'V2' ? 10 : 12
 
 	"""
-	${IONICE} STAR --soloBarcodeReadLength 0 --runThreadN 10 --genomeLoad NoSharedMemory --runRNGseed 789727 --readFilesCommand gunzip -c --outSAMattributes NH HI nM AS CR CY CB UR UY UB sM GX GN --genomeDir ${get_star_index(genome)} --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within KeepPairs --sjdbGTFfile ${get_gtf(genome)} --soloType Droplet --soloFeatures Transcript3p Gene GeneFull SJ Velocyto --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --soloCellFilter None --soloCBwhitelist ${params['barcode-whitelist']} --readFilesIn ${insert_fastq.join(',')} ${barcode_fastq.join(',')}
+	${IONICE} STAR --soloBarcodeReadLength 0 --runThreadN 10 --genomeLoad NoSharedMemory --runRNGseed 789727 --readFilesCommand gunzip -c --outSAMattributes NH HI nM AS CR CY CB UR UY UB sM GX GN --genomeDir ${get_star_index(genome)} --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within KeepPairs --sjdbGTFfile ${get_gtf(genome)} --soloType Droplet --soloUMIlen $soloUMIlen --soloFeatures Transcript3p Gene GeneFull SJ Velocyto --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --soloCellFilter None --soloCBwhitelist ${params['barcode-whitelist']} --readFilesIn ${insert_fastq.join(',')} ${barcode_fastq.join(',')}
 	"""
 
 }
