@@ -14,7 +14,7 @@ parser = argparse.ArgumentParser(description='Gather stats from a snRNA-seq bam 
 parser.add_argument('bam', type = str,  help = 'BAM file, sorted by read name.')
 parser.add_argument('--cell-tag', dest='cell_tag', type = str, default = 'CB', help = 'Tag denoting the cell/nucleus (default: CB)')
 parser.add_argument('--gene-tag', dest='gene_tag', type = str, default = 'GX', help = 'Tag denoting the gene assignment (default: GX)')
-parser.add_argument('--umi-tag', dest='umi_tag', type = str, default = 'UB', help = 'Tag denoting the gene assignment (default: UB)')
+parser.add_argument('--umi-tag', dest='umi_tag', type = str, default = 'UB', help = 'Tag denoting the UMI (default: UB)')
 parser.add_argument('--min-reads', dest='min_reads', type = int, default = 0, help = 'Suppress output for cells with fewer than this many reads (default: 0).')
 args = parser.parse_args()
 
