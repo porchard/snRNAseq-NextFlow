@@ -65,7 +65,7 @@ process starsolo {
 
 	output:
 	set val(library), file("Aligned.sortedByCoord.out.bam"), file("Log.final.out"), file("Log.out"), file("Log.progress.out"), file("SJ.out.tab"), file("Solo.out")
-	set val(library), val(genome), file("Aligned.sortedByCoord.out.bam") into feature_counts_in
+	set val(library), val(genome), file("Aligned.sortedByCoord.out.bam"), file("Solo.out") into qc_in
 	set val(library), val(genome), file("Aligned.sortedByCoord.out.bam") into prune_in
 
 	script:
@@ -117,38 +117,20 @@ process fastqc {
 }
 
 
-process feature_counts {
+process qc {
 
-	cpus 20
-	publishDir "${params.results}/feature-counts"
+	memory '25 GB'
+	publishDir "${params.results}/qc"
 
 	input:
-	set val(library), val(genome), file("star.bam") from feature_counts_in
+	set val(library), val(genome), file("star.bam"), file(solo_out) from qc_in
 
 	output:
-	set val(library), val(genome), file("${library}-${genome}.featureCounts.bam") into feature_counts_out
+	set val(library), val(genome), file("${library}-${genome}.qc.txt")
 	
 
 	"""
-	~/sw/subread-1.6.4-Linux-x86_64/bin/featureCounts -a ${get_gtf(genome)} -T 20 -t transcript -o ${library}-${genome} star.bam -R BAM -O -s 1; mv star.bam.featureCounts.bam ${library}-${genome}.featureCounts.bam
-	"""
-
-}
-
-
-process qc {
-
-	publishDir "${params.results}/qc"
-	memory '75 GB'
-
-	input:
-	set val(library), val(genome), file(bam) from feature_counts_out
-
-	output:
-	set val(library), val(genome), file("${library}-${genome}.qc.json.gz")
-
-	"""
-	qc-from-featurecounts.py --cell-tag CB --gene-tag XT --umi-tag UB --min-reads 100 $bam | gzip -c > ${library}-${genome}.qc.json.gz
+	qc-from-starsolo.py star.bam ${solo_out}/GeneFull/raw/matrix.mtx ${solo_out}/GeneFull/raw/barcodes.tsv > ${library}-${genome}.qc.txt
 	"""
 
 }
