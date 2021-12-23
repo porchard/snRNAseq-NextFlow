@@ -102,7 +102,7 @@ if __name__ == '__main__':
     print('\t'.join(print_metrics))
     for cell in cells.values():
         metrics = cell.gather_metrics()
-        metrics['umis'] = umis_per_barcode[metrics['barcode']] if metrics['barcode'] in umis_per_barcode else None
+        metrics['umis'] = umis_per_barcode[metrics['barcode']] if metrics['barcode'] in umis_per_barcode else 'NA'
         to_print = [str(metrics[i]) for i in print_metrics]
         print('\t'.join(to_print))
 

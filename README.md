@@ -4,15 +4,18 @@
 If you have Singularity installed, you can use the config provided here ('Singularity') to build a container with all the dependencies.
 
 Otherwise, you'll need to have the following installed:
-1. bedtools
-2. biopython
-3. STAR
-4. fastqc
-5. samtools
-6. pysam
-7. pybedtools
+1. STAR (v. 2.7.3+)
+2. fastqc
+3. samtools (v. 1.7+)
+4. python (v. 3.8+)
+5. pysam
+6. numpy
+7. scipy
+8. pandas
+9. matplotlib
+10. seaborn
 
-I've used this pipeline with NextFlow v. 19.04.1
+I've used this pipeline with NextFlow v. 20.10.0
 
 ## Configuration
 Paths to various generic files (e.g., STAR indices) must be included in the nextflow.config file -- check that file and change paths accordingly. These include:
