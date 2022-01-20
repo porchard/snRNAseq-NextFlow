@@ -4,11 +4,11 @@ nextflow.enable.dsl=2
 IONICE = 'ionice -c2 -n7'
 
 def get_star_index (genome) {
-	params.star_index[genome]
+	return(params.star_index[genome])
 }
 
 def get_gtf (genome) {
-	return(get_star_index(genome) + '/annotation.gtf')
+	return(params.gtf[genome])
 }
 
 def get_chrom_sizes (genome) {
@@ -16,15 +16,15 @@ def get_chrom_sizes (genome) {
 }
 	
 def get_genome (library) {
-	params.libraries[library].genome
+	return(params.libraries[library].genome)
 }
 
 def library_to_readgroups (library) {
-	params.libraries[library].readgroups.keySet()
+	return(params.libraries[library].readgroups.keySet())
 }
 
 def library_and_readgroup_to_fastqs (library, readgroup) {
-	params.libraries[library].readgroups[readgroup]
+	return(params.libraries[library].readgroups[readgroup])
 }
 
 
@@ -34,29 +34,52 @@ process starsolo {
     memory '75 GB'
     cpus 10
     tag "${library}-${genome}"
+    container 'library://porchard/default/star:2.7.9a'
 
     input:
     tuple val(library), val(genome), path(barcode_fastq), path(insert_fastq)
 
     output:
-    tuple val(library), path("Aligned.sortedByCoord.out.bam"), path("Log.final.out"), path("Log.out"), path("Log.progress.out"), path("SJ.out.tab"), path("Solo.out")
-    tuple val(library), val(genome), path("Aligned.sortedByCoord.out.bam"), path("Solo.out"), emit: for_qc
-    tuple val(library), val(genome), path("Aligned.sortedByCoord.out.bam"), emit: for_prune
+    tuple val(library), path("${library}-${genome}.Aligned.sortedByCoord.out.bam"), path("${library}-${genome}.Log.final.out"), path("${library}-${genome}.Log.out"), path("${library}-${genome}.Log.progress.out"), path("${library}-${genome}.SJ.out.tab"), path("${library}-${genome}.Solo.out")
+    tuple val(library), val(genome), path("${library}-${genome}.Aligned.sortedByCoord.out.bam"), path("${library}-${genome}.Solo.out"), emit: for_qc
+    tuple val(library), val(genome), path("${library}-${genome}.Aligned.sortedByCoord.out.bam"), emit: for_prune
+    path("${library}-${genome}.Log.final.out"), emit: for_multiqc
 
     script:
     soloUMIlen = params.chemistry == 'V2' ? 10 : 12
 
     """
-    ${IONICE} STAR --soloBarcodeReadLength 0 --runThreadN 10 --genomeLoad NoSharedMemory --runRNGseed 789727 --readFilesCommand gunzip -c --outSAMattributes NH HI nM AS CR CY CB UR UY UB sM GX GN --genomeDir ${get_star_index(genome)} --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within KeepPairs --sjdbGTFfile ${get_gtf(genome)} --soloType Droplet --soloUMIlen $soloUMIlen --soloFeatures Transcript3p Gene GeneFull SJ Velocyto --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --soloCellFilter None --soloCBwhitelist ${params['barcode-whitelist']} --readFilesIn ${insert_fastq.join(',')} ${barcode_fastq.join(',')}
+    ${IONICE} STAR --soloBarcodeReadLength 0 --runThreadN 10 --outFileNamePrefix ${library}-${genome}. --genomeLoad NoSharedMemory --runRNGseed 789727 --readFilesCommand gunzip -c --outSAMattributes NH HI nM AS CR CY CB UR UY UB sM GX GN --genomeDir ${get_star_index(genome)} --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within KeepPairs --sjdbGTFfile ${get_gtf(genome)} --soloType Droplet --soloUMIlen $soloUMIlen --soloFeatures Transcript3p Gene GeneFull SJ Velocyto --soloMultiMappers Uniform PropUnique EM Rescue --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --soloCellFilter None --soloCBwhitelist ${params['barcode-whitelist']} --readFilesIn ${insert_fastq.join(',')} ${barcode_fastq.join(',')}
     """
 
 }
+
+
+process star_multiqc {
+
+    publishDir "${params.results}/multiqc/star", mode: 'rellink', overwrite: true
+    container 'library://porchard/default/general:20220107'
+
+    input:
+    path(x)
+
+    output:
+    path('multiqc_data')
+    path('multiqc_report.html')
+
+    """
+    multiqc .
+    """
+
+}
+
 
 process prune {
 
     publishDir "${params.results}/prune", mode: 'rellink', overwrite: true
     maxForks 10
     tag "${library}-${genome}"
+    container 'library://porchard/default/general:20220107'
 
     input:
     tuple val(library), val(genome), path(bam)
@@ -70,11 +93,13 @@ process prune {
 
 }
 
+
 process fastqc {
 
     publishDir "${params.results}/fastqc", mode: 'rellink', overwrite: true
     maxForks 6
     tag "${library} ${readgroup}"
+    container 'library://porchard/default/general:20220107'
 
     input:
     tuple val(library), val(readgroup), path(fastq)
@@ -93,11 +118,31 @@ process fastqc {
 }
 
 
+process fastq_multiqc {
+
+    publishDir "${params.results}/multiqc/fastq", mode: 'rellink', overwrite: true
+    container 'library://porchard/default/general:20220107'
+
+    input:
+    path(x)
+
+    output:
+    path('multiqc_data')
+    path('multiqc_report.html')
+
+    """
+    multiqc .
+    """
+
+}
+
+
 process qc {
 
     memory '25 GB'
     publishDir "${params.results}/qc"
     tag "${library}-${genome}"
+    container 'library://porchard/default/general:20220107'
 
     input:
     tuple val(library), val(genome), path("star.bam"), path(solo_out)
@@ -112,11 +157,13 @@ process qc {
 
 }
 
+
 process plot_qc {
 
     memory '15 GB'
     publishDir "${params.results}/qc"
     tag "${library}-${genome}"
+    container 'library://porchard/default/general:20220107'
 
     input:
     tuple val(library), val(genome), path(metrics)
@@ -152,9 +199,10 @@ workflow {
         }
     }
 
-    fastqc(Channel.from(fastqc_in))
+    fastqc(Channel.from(fastqc_in)).flatten().toSortedList() | fastq_multiqc
     star_in = Channel.from(fastq_in).groupTuple(by: [0,1])
     starsolo_out = starsolo(star_in)
+    star_multiqc(starsolo_out.for_multiqc.toSortedList())
     prune(starsolo_out.for_prune)
     qc(starsolo_out.for_qc) | plot_qc
 
