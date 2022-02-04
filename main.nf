@@ -34,7 +34,7 @@ process starsolo {
     memory '75 GB'
     cpus 10
     tag "${library}-${genome}"
-    container 'library://porchard/default/star:2.7.9a'
+    container 'library://porchard/default/star:2.7.10a'
 
     input:
     tuple val(library), val(genome), path(barcode_fastq), path(insert_fastq)
@@ -49,7 +49,7 @@ process starsolo {
     soloUMIlen = params.chemistry == 'V2' ? 10 : 12
 
     """
-    ${IONICE} STAR --soloBarcodeReadLength 0 --runThreadN 10 --outFileNamePrefix ${library}-${genome}. --genomeLoad NoSharedMemory --runRNGseed 789727 --readFilesCommand gunzip -c --outSAMattributes NH HI nM AS CR CY CB UR UY UB sM GX GN --genomeDir ${get_star_index(genome)} --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within KeepPairs --sjdbGTFfile ${get_gtf(genome)} --soloType Droplet --soloUMIlen $soloUMIlen --soloFeatures Transcript3p Gene GeneFull SJ Velocyto --soloMultiMappers Uniform PropUnique EM Rescue --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --soloCellFilter None --soloCBwhitelist ${params['barcode-whitelist']} --readFilesIn ${insert_fastq.join(',')} ${barcode_fastq.join(',')}
+    ${IONICE} STAR --soloBarcodeReadLength 0 --runThreadN 10 --outFileNamePrefix ${library}-${genome}. --genomeLoad NoSharedMemory --runRNGseed 789727 --readFilesCommand gunzip -c --outSAMattributes NH HI nM AS CR CY CB UR UY UB sM GX GN --genomeDir ${get_star_index(genome)} --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within KeepPairs --sjdbGTFfile ${get_gtf(genome)} --soloType Droplet --soloUMIlen $soloUMIlen --soloFeatures Transcript3p Gene GeneFull GeneFull_ExonOverIntron GeneFull_Ex50pAS SJ Velocyto --soloMultiMappers Uniform PropUnique EM Rescue --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --soloCellFilter None --soloCBwhitelist ${params['barcode-whitelist']} --readFilesIn ${insert_fastq.join(',')} ${barcode_fastq.join(',')}
     """
 
 }
