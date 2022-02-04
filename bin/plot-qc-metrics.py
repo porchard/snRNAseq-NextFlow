@@ -29,12 +29,12 @@ def read_count_formatter(x, pos):
 
 qc = pd.read_csv(RNAQC_METRIC_FILE, sep='\t')
 
-bulk_stats_no_barcodes = qc.loc[qc.barcode=='no_barcode',['total_reads', 'uniquely_mapped_reads']].sum().rename('value').reset_index().assign(grp='Reads w/o\nwhitelisted barcode')
-bulk_stats_whitelisted_barcodes = qc.loc[qc.barcode!='no_barcode',['total_reads', 'uniquely_mapped_reads']].sum().rename('value').reset_index().assign(grp='Reads w/\nwhitelisted barcode')
+bulk_stats_no_barcodes = qc.loc[qc.barcode=='-',['total_reads', 'uniquely_mapped_reads']].sum().rename('value').reset_index().assign(grp='Reads w/o\nwhitelisted barcode')
+bulk_stats_whitelisted_barcodes = qc.loc[qc.barcode!='-',['total_reads', 'uniquely_mapped_reads']].sum().rename('value').reset_index().assign(grp='Reads w/\nwhitelisted barcode')
 bulk_stats = pd.concat([bulk_stats_no_barcodes, bulk_stats_whitelisted_barcodes]).rename(columns={'index': 'stat'})
 bulk_stats.stat = bulk_stats.stat.map({'total_reads': 'Total reads', 'uniquely_mapped_reads': 'Uniquely mapped reads'})
 
-cumulative = qc[(qc.barcode!='no_barcode') & (qc.umis>0)].sort_values('umis', ascending=False)
+cumulative = qc[(qc.barcode!='-') & (qc.umis>0)].sort_values('umis', ascending=False)
 cumulative['rnk'] = range(1, len(cumulative)+1)
 
 
