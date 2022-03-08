@@ -14,7 +14,7 @@ def get_gtf (genome) {
 def get_chrom_sizes (genome) {
 	return(get_star_index(genome) + '/chrNameLength.txt')
 }
-	
+
 def get_genome (library) {
 	return(params.libraries[library].genome)
 }
@@ -140,7 +140,7 @@ process fastq_multiqc {
 process qc {
 
     memory '25 GB'
-    publishDir "${params.results}/qc"
+    publishDir "${params.results}/qc", mode: 'rellink', overwrite: true
     tag "${library}-${genome}"
     container 'library://porchard/default/general:20220107'
 
@@ -161,7 +161,7 @@ process qc {
 process plot_qc {
 
     memory '15 GB'
-    publishDir "${params.results}/qc"
+    publishDir "${params.results}/qc", mode: 'rellink', overwrite: true
     tag "${library}-${genome}"
     container 'library://porchard/default/general:20220107'
 
