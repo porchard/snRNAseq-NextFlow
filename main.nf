@@ -42,6 +42,7 @@ process starsolo {
     output:
     tuple val(library), path("${library}-${genome}.Aligned.sortedByCoord.out.bam"), path("${library}-${genome}.Log.final.out"), path("${library}-${genome}.Log.out"), path("${library}-${genome}.Log.progress.out"), path("${library}-${genome}.SJ.out.tab"), path("${library}-${genome}.Solo.out")
     tuple val(library), val(genome), path("${library}-${genome}.Aligned.sortedByCoord.out.bam"), path("${library}-${genome}.Solo.out"), emit: for_qc
+    tuple val(library), val(genome), path("${library}-${genome}.Solo.out"), emit: for_dropkick
     tuple val(library), val(genome), path("${library}-${genome}.Aligned.sortedByCoord.out.bam"), emit: for_prune
     path("${library}-${genome}.Log.final.out"), emit: for_multiqc
 
@@ -158,6 +159,33 @@ process qc {
 }
 
 
+process dropkick {
+
+    memory '150 GB'
+    publishDir "${params.results}/dropkick"
+    tag "${library}-${genome}"
+    container 'library://porchard/default/dropkick:20220225'
+    errorStrategy 'ignore'
+
+    input:
+    tuple val(library), val(genome), path(solo_out)
+
+    output:
+    tuple val(library), val(genome), path("${library}-${genome}.dropkick-score.tsv"), emit: dk_score
+    path("*.png")
+
+
+    """
+    mkdir -p dropkick-in
+    cp ${solo_out}/GeneFull/raw/matrix.mtx dropkick-in/matrix.mtx
+    cp ${solo_out}/GeneFull/raw/features.tsv dropkick-in/genes.tsv
+    cp ${solo_out}/GeneFull/raw/barcodes.tsv dropkick-in/barcodes.tsv
+    run-dropkick.py dropkick-in/ ${library}-${genome}.
+    """
+
+}
+
+
 process plot_qc {
 
     memory '15 GB'
@@ -166,14 +194,14 @@ process plot_qc {
     container 'library://porchard/default/general:20220107'
 
     input:
-    tuple val(library), val(genome), path(metrics)
+    tuple val(library), val(genome), path(metrics), path(dk)
 
     output:
     tuple val(library), val(genome), path("${library}-${genome}.metrics.png")
 
 
     """
-    plot-qc-metrics.py --prefix ${library}-${genome}. $metrics
+    plot-qc-metrics.py --prefix ${library}-${genome}. $metrics $dk
     """
 
 }
@@ -204,6 +232,6 @@ workflow {
     starsolo_out = starsolo(star_in)
     star_multiqc(starsolo_out.for_multiqc.toSortedList())
     prune(starsolo_out.for_prune)
-    qc(starsolo_out.for_qc) | plot_qc
+    qc(starsolo_out.for_qc).combine(dropkick(starsolo_out.for_dropkick).dk_score, by: [0, 1]) | plot_qc
 
 }
