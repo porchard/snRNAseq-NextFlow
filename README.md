@@ -21,3 +21,11 @@ Once you have all of the above information, you can run the pipeline as follows 
 ```bash
 nextflow run -params-file library-config.json --chemistry multiome --results /path/to/results /path/to/main.nf
 ```
+
+## Output
+* `dropkick/*`: Results of running dropkick per-library (QC plots, as well as per-barcode dropkick score that can be used for selecting quality barcodes for downstream analysis)
+* `multiqc/fastq/*`: multiqc summaries of fastqc results
+* `multiqc/star/*`: multiqc summaries of STAR logs
+* `prune/*`: filtered bam files (duplicates NOT removed)
+* `qc/*`: Per-barcode QC metrics and QC metric plots
+* `starsolo/*`: starsolo output. Count matrices derived using a variety of counting methods (see STAR manual) are in `starsolo/{library}/{library}.Solo.out/*`
