@@ -162,6 +162,7 @@ process qc {
 process dropkick {
 
     memory '150 GB'
+    cpus 5
     publishDir "${params.results}/dropkick"
     tag "${library}-${genome}"
     container 'library://porchard/default/dropkick:20220225'
