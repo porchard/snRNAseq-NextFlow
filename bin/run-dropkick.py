@@ -14,13 +14,13 @@ INDIR, PREFIX = sys.argv[1:]
 x = scanpy.read_10x_mtx(INDIR)
 
 # TODO: may wish to select min_genes based on the overall distribution or the value for e.g. the 100kth barcode.
-adata = dk.recipe_dropkick(x, min_genes=5, n_hvgs=None, X_final="raw_counts", mito_names='^mt-|^MT-|^Mt-')
+adata = dk.recipe_dropkick(x, X_final="raw_counts", mito_names='^mt-|^MT-|^Mt-')
 
 qc_plt = dk.qc_summary(adata)
 qc_plt.savefig(f'{PREFIX}dropkick-qc.png', dpi=300)
 qc_plt.clf()
 
-adata_model = dk.dropkick(adata, n_jobs=5, min_genes=5, mito_names='^mt-|^MT-|^Mt-')
+adata_model = dk.dropkick(adata, n_jobs=5, mito_names='^mt-|^MT-|^Mt-')
 
 
 with open(f'{PREFIX}adata.pickle', 'wb') as fh:
