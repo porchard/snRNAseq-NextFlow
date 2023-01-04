@@ -31,7 +31,7 @@ def library_and_readgroup_to_fastqs (library, readgroup) {
 process starsolo {
 
     publishDir "${params.results}/starsolo/${library}-${genome}", mode: 'rellink', overwrite: true
-    memory '75 GB'
+    memory '100 GB'
     cpus 10
     tag "${library}-${genome}"
     container 'library://porchard/default/star:2.7.10a'
@@ -192,13 +192,13 @@ process plot_qc {
     memory '15 GB'
     publishDir "${params.results}/qc"
     tag "${library}-${genome}"
-    container 'library://porchard/default/general:20220107'
+    container 'library://porchard/default/dropkick:20220225'
 
     input:
     tuple val(library), val(genome), path(metrics), path(dk)
 
     output:
-    tuple val(library), val(genome), path("${library}-${genome}.metrics.png")
+    tuple val(library), val(genome), path("${library}-${genome}.metrics.png"), path("${library}-${genome}.suggested-thresholds.tsv")
 
 
     """

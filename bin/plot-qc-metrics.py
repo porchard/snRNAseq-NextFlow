@@ -5,6 +5,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import seaborn as sns
+from skimage.filters import threshold_multiotsu
+import numpy as np
 import argparse
 
 parser = argparse.ArgumentParser(add_help=True)
@@ -43,6 +45,36 @@ cumulative['rnk'] = range(1, len(cumulative)+1)
 qc = qc[qc.barcode!='-'].merge(dropkick, how='left')
 qc.dropkick_score = qc.dropkick_score.fillna(0)
 
+# try to infer UMI threshold
+def estimate_threshold(x):
+    # do on logscale
+    values = np.log10(x).values
+    values = values.reshape((len(values),1))
+    thresholds = threshold_multiotsu(image=values, classes=3, nbins=256)
+    # convert back to linear scale
+    thresholds = [pow(10, i) for i in thresholds]
+    UMI_THRESHOLD = round(thresholds[1])
+    return UMI_THRESHOLD
+
+
+MAX_EXPECTED_NUMBER_NUCLEI = int(10e3)
+LOWERBOUNDS = [1, 5, 10, 50, 100, 500]
+for i in LOWERBOUNDS:
+    UMI_THRESHOLD = estimate_threshold(qc[(qc.barcode!='-') & (qc.umis>=i)].umis.astype(int))
+    NUMBER_MEETING_UMI_THRESHOLD = (qc.umis>=UMI_THRESHOLD).sum()
+    if NUMBER_MEETING_UMI_THRESHOLD <= MAX_EXPECTED_NUMBER_NUCLEI:
+        break
+
+if NUMBER_MEETING_UMI_THRESHOLD > MAX_EXPECTED_NUMBER_NUCLEI:
+    # just fall back to 500
+    UMI_THRESHOLD = 500
+    NUMBER_MEETING_UMI_THRESHOLD = (qc.umis>=UMI_THRESHOLD).sum()
+
+
+suggested_thresholds = pd.DataFrame({'metric': ['min_UMI'], 'threshold': UMI_THRESHOLD})
+suggested_thresholds.to_csv(f'{PREFIX}suggested-thresholds.tsv', sep='\t', index=False)
+
+
 fig, axs = plt.subplots(ncols=4, figsize=(5.5*4, 5.5))
 
 # read counts
@@ -58,18 +90,22 @@ ax.grid(True)
 # UMI rank plot
 ax = axs[1]
 sns.scatterplot(x='rnk', y='umis', data=cumulative, edgecolor=None, ax=ax)
+ax.axhline(UMI_THRESHOLD, color='red', ls='--', label='Recommended\nmin. UMIs = {:,}'.format(UMI_THRESHOLD))
+ax.axvline(NUMBER_MEETING_UMI_THRESHOLD, color='blue', ls='--', label='# nuclei meeting\nUMI threshold = {:,}'.format(NUMBER_MEETING_UMI_THRESHOLD))
 ax.set_xscale('log')
 ax.set_yscale('log')
 ax.yaxis.set_major_formatter(read_count_formatter)
 ax.set_xlabel('Barcode rank')
 ax.set_ylabel('# UMIs')
 ax.grid(True)
+ax.legend()
 
 # UMIs vs fraction mitochondrial
 ax = axs[2]
 sns.scatterplot(x='umis', y='fraction_mitochondrial', hue='dropkick_score', data=qc, alpha=0.01, ax=ax)
 ax.set_xscale('log')
 ax.set_xlim(left=1)
+ax.axvline(UMI_THRESHOLD, color='red', ls='--')
 ax.xaxis.set_major_formatter(read_count_formatter)
 ax.set_xlabel('# UMIs')
 ax.set_ylabel('Fraction mitochondrial')
@@ -78,7 +114,8 @@ ax.grid(True)
 ax = axs[3]
 sns.scatterplot(x='umis', y='fraction_mitochondrial', hue='dropkick_score', data=qc, alpha=0.01, ax=ax)
 ax.set_xscale('log')
-ax.set_xlim(left=100)
+ax.set_xlim(left=min([100, UMI_THRESHOLD*0.8]))
+ax.axvline(UMI_THRESHOLD, color='red', ls='--')
 ax.xaxis.set_major_formatter(read_count_formatter)
 ax.set_xlabel('# UMIs')
 ax.set_ylabel('Fraction mitochondrial')
