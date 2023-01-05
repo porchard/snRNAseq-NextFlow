@@ -1,4 +1,4 @@
-# NextFlow pipeline for 10X snATAC-seq data
+# NextFlow pipeline for 10X snRNA-seq data
 
 ## Dependencies
 Singularity (v. 3) and NextFlow (>= v. 20.10.0). Containers with the software for each step are pulled from the Sylabs cloud library (https://cloud.sylabs.io/library).
