@@ -19,8 +19,10 @@ Lastly, you'll need to include information about each RNA-seq library, including
 Once you have all of the above information, you can run the pipeline as follows (in this case, indicating the path to the results on the command line):
 
 ```bash
-nextflow run -params-file library-config.json --chemistry multiome --results /path/to/results /path/to/main.nf
+nextflow run -resume -params-file library-config.json --chemistry multiome --results /path/to/results /path/to/main.nf
 ```
+
+You may wish to run under nohup so that the pipeline continues to run in the background and does not terminate upon logging out of the server (`nohup nextflow run ... &`)
 
 ## Output
 * `dropkick/*`: Results of running dropkick per-library (QC plots, as well as per-barcode dropkick score that can be used for selecting quality barcodes for downstream analysis)
