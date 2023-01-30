@@ -31,10 +31,11 @@ def library_and_readgroup_to_fastqs (library, readgroup) {
 process starsolo {
 
     publishDir "${params.results}/starsolo/${library}-${genome}", mode: 'rellink', overwrite: true
-    memory '100 GB'
+    memory { 70.GB + (30.GB * task.attempt) }
     cpus 10
     tag "${library}-${genome}"
     container 'library://porchard/default/star:2.7.10a'
+    maxRetries 3
 
     input:
     tuple val(library), val(genome), path(barcode_fastq), path(insert_fastq)
@@ -50,7 +51,7 @@ process starsolo {
     soloUMIlen = params.chemistry == 'V2' ? 10 : 12
 
     """
-    ${IONICE} STAR --soloBarcodeReadLength 0 --runThreadN 10 --outFileNamePrefix ${library}-${genome}. --genomeLoad NoSharedMemory --runRNGseed 789727 --readFilesCommand gunzip -c --outSAMattributes NH HI nM AS CR CY CB UR UY UB sM GX GN --genomeDir ${get_star_index(genome)} --outSAMtype BAM SortedByCoordinate --outSAMunmapped Within KeepPairs --sjdbGTFfile ${get_gtf(genome)} --soloType Droplet --soloUMIlen $soloUMIlen --soloFeatures Transcript3p Gene GeneFull GeneFull_ExonOverIntron GeneFull_Ex50pAS SJ Velocyto --soloMultiMappers Uniform PropUnique EM Rescue --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --soloCellFilter None --soloCBwhitelist ${params['barcode-whitelist']} --readFilesIn ${insert_fastq.join(',')} ${barcode_fastq.join(',')}
+    ${IONICE} STAR --soloBarcodeReadLength 0 --runThreadN 10 --outFileNamePrefix ${library}-${genome}. --genomeLoad NoSharedMemory --runRNGseed 789727 --readFilesCommand gunzip -c --outSAMattributes NH HI nM AS CR CY CB UR UY UB sM GX GN --genomeDir ${get_star_index(genome)} --outSAMtype BAM SortedByCoordinate --limitBAMsortRAM ${30000000000 + (10000000000 * task.attempt)} --outBAMsortingBinsN 200 --outSAMunmapped Within KeepPairs --sjdbGTFfile ${get_gtf(genome)} --soloType Droplet --soloUMIlen $soloUMIlen --soloFeatures Transcript3p Gene GeneFull GeneFull_ExonOverIntron GeneFull_Ex50pAS SJ Velocyto --soloMultiMappers Uniform PropUnique EM Rescue --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --soloCellFilter None --soloCBwhitelist ${params['barcode-whitelist']} --readFilesIn ${insert_fastq.join(',')} ${barcode_fastq.join(',')}
     """
 
 }
