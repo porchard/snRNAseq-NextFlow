@@ -61,6 +61,7 @@ process star_multiqc {
 
     publishDir "${params.results}/multiqc/star", mode: 'rellink', overwrite: true
     container 'library://porchard/default/general:20220107'
+    memory '4 GB'
 
     input:
     path(x)
@@ -82,6 +83,7 @@ process prune {
     maxForks 10
     tag "${library}-${genome}"
     container 'library://porchard/default/general:20220107'
+    memory '2 GB'
 
     input:
     tuple val(library), val(genome), path(bam)
@@ -102,6 +104,7 @@ process fastqc {
     maxForks 6
     tag "${library} ${readgroup}"
     container 'library://porchard/default/general:20220107'
+    memory '4 GB'
 
     input:
     tuple val(library), val(readgroup), path(fastq)
@@ -124,6 +127,7 @@ process fastq_multiqc {
 
     publishDir "${params.results}/multiqc/fastq", mode: 'rellink', overwrite: true
     container 'library://porchard/default/general:20220107'
+    memory '4 GB'
 
     input:
     path(x)
