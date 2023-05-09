@@ -30,12 +30,13 @@ def library_and_readgroup_to_fastqs (library, readgroup) {
 
 process starsolo {
 
-    publishDir "${params.results}/starsolo/${library}-${genome}", mode: 'rellink', overwrite: true
+    publishDir "${params.results}/starsolo/${library}-${genome}"
     memory { 70.GB + (30.GB * task.attempt) }
     cpus 10
     tag "${library}-${genome}"
     container 'library://porchard/default/star:2.7.10a'
     maxRetries 3
+    time '10h'
 
     input:
     tuple val(library), val(genome), path(barcode_fastq), path(insert_fastq)
@@ -59,9 +60,11 @@ process starsolo {
 
 process star_multiqc {
 
-    publishDir "${params.results}/multiqc/star", mode: 'rellink', overwrite: true
+    publishDir "${params.results}/multiqc/star"
     container 'library://porchard/default/general:20220107'
     memory '4 GB'
+    cpus 1
+    time '2h'
 
     input:
     path(x)
@@ -79,11 +82,12 @@ process star_multiqc {
 
 process prune {
 
-    publishDir "${params.results}/prune", mode: 'rellink', overwrite: true
-    maxForks 10
+    publishDir "${params.results}/prune"
     tag "${library}-${genome}"
     container 'library://porchard/default/general:20220107'
     memory '2 GB'
+    cpus 1
+    time '5h'
 
     input:
     tuple val(library), val(genome), path(bam)
@@ -100,11 +104,12 @@ process prune {
 
 process fastqc {
 
-    publishDir "${params.results}/fastqc", mode: 'rellink', overwrite: true
-    maxForks 6
+    publishDir "${params.results}/fastqc"
     tag "${library} ${readgroup}"
     container 'library://porchard/default/general:20220107'
     memory '4 GB'
+    cpus 1
+    time '5h'
 
     input:
     tuple val(library), val(readgroup), path(fastq)
@@ -125,9 +130,11 @@ process fastqc {
 
 process fastq_multiqc {
 
-    publishDir "${params.results}/multiqc/fastq", mode: 'rellink', overwrite: true
+    publishDir "${params.results}/multiqc/fastq"
     container 'library://porchard/default/general:20220107'
     memory '4 GB'
+    cpus 1
+    time '5h'
 
     input:
     path(x)
@@ -149,6 +156,8 @@ process qc {
     publishDir "${params.results}/qc"
     tag "${library}-${genome}"
     container 'library://porchard/default/general:20220107'
+    cpus 1
+    time '5h'
 
     input:
     tuple val(library), val(genome), path("star.bam"), path(solo_out)
@@ -172,6 +181,7 @@ process dropkick {
     tag "${library}-${genome}"
     container 'library://porchard/default/dropkick:20220225'
     errorStrategy 'ignore'
+    time '5h'
 
     input:
     tuple val(library), val(genome), path(solo_out)
@@ -198,6 +208,8 @@ process plot_qc {
     publishDir "${params.results}/qc"
     tag "${library}-${genome}"
     container 'library://porchard/default/dropkick:20220225'
+    cpus 1
+    time '5h'
 
     input:
     tuple val(library), val(genome), path(metrics), path(dk)
