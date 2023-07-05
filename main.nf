@@ -225,6 +225,29 @@ process plot_qc {
 }
 
 
+process interactive_barcode_rank_plot {
+
+    memory '15 GB'
+    publishDir "${params.results}/interactive-barcode-rank-plots"
+    tag "${library}-${genome}"
+    container "docker://porchard/plotly:20230705"
+    cpus 1
+    time '3h'
+
+    input:
+    tuple val(library), val(genome), path(solo_out)
+
+    output:
+    path("${library}-${genome}.barcode-rank-plot.html")
+
+
+    """
+    interactive-barcode-rank-plot.py ${solo_out}/GeneFull_ExonOverIntron/raw/matrix.mtx ${library}-${genome}.barcode-rank-plot.html
+    """
+
+}
+
+
 workflow {
 
     libraries = params.libraries.keySet()
@@ -251,5 +274,6 @@ workflow {
     star_multiqc(starsolo_out.for_multiqc.toSortedList())
     prune(starsolo_out.for_prune)
     qc(starsolo_out.for_qc).combine(dropkick(starsolo_out.for_dropkick).dk_score, by: [0, 1]) | plot_qc
+    interactive_barcode_rank_plot(starsolo_out.for_dropkick)
 
 }
