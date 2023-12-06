@@ -9,11 +9,11 @@ Paths to reference files must be included in the nextflow.config file -- check t
 
 1. STAR indices (compatible with STAR v. 2.7.9a)
 2. GTF files
-3. Barcode whitelist (for Chromium v3, that is the 3M-february-2018.txt file; for v2, that is the 737K-august-2016.txt file; for multiome, that is 737K-arc-v1.txt)
+3. Barcode whitelist (for Chromium 3' GEX v3, that is the 3M-february-2018.txt file; for 3' GEX v2 or 5' GEX v1 and v2, that is the 737K-august-2016.txt file; for multiome, that is 737K-arc-v1.txt)
 
-You'll also need to set the params.results variable -- either in the nextflow.config file itself, or on the command line when you run the pipeline ('--results /path/to/results') as well as the 10X Chromium chemistry version ('V2', 'V3', or 'multiome')
+You'll also need to set the params.results variable -- either in the nextflow.config file itself, or on the command line when you run the pipeline ('--results /path/to/results') as well as the 10X Chromium chemistry version ('V2', 'V3', 'GEX5', or 'multiome'). Note for 5' GEX ('GEX5'), read 1 is currently assumed to include cDNA in addition to the CB, UMI, and adapter; i.e. it's length should be > 39 bp.
 
-Lastly, you'll need to include information about each RNA-seq library, including the genome to which it should be mapped, and the paths to the fastq files for each readgroup. Organize this information in a JSON file, as in library-config.json. For each readgroup, the '1' fastq file corresponds to the sequencing read including the UMI and the nucleus index; the '2' fastq file refers to the sequencing read representing the actual transcript. Also, note that the 'genome' attribute is given as a list (because I will be adding the ability to map to multiple genomes, in the case that nuclei from multiple species are mixed together).
+Lastly, you'll need to include information about each RNA-seq library, including the genome to which it should be mapped, and the paths to the fastq files for each readgroup. Organize this information in a JSON file, as in library-config.json. For each readgroup, the '1' fastq file corresponds to the sequencing read including the UMI and the nucleus index (and, for 5' GEX, some cDNA); the '2' fastq file refers to the sequencing read representing only cDNA. Also, note that the 'genome' attribute is given as a list (because I will be adding the ability to map to multiple genomes, in the case that nuclei from multiple species are mixed together).
 
 ## Running
 Once you have all of the above information, you can run the pipeline as follows (in this case, indicating the path to the results on the command line):

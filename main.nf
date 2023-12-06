@@ -36,7 +36,7 @@ process starsolo {
     tag "${library}-${genome}"
     container 'library://porchard/default/star:2.7.10a'
     maxRetries 3
-    time '10h'
+    time '48h'
 
     input:
     tuple val(library), val(genome), path(barcode_fastq), path(insert_fastq)
@@ -49,10 +49,14 @@ process starsolo {
     path("${library}-${genome}.Log.final.out"), emit: for_multiqc
 
     script:
-    soloUMIlen = params.chemistry == 'V2' ? 10 : 12
+    soloUMIlen = ['V2', 'GEX5'].contains(params.chemistry) ? 10 : 12
+    clip5pNbases = params.chemistry == 'GEX5' ? '39 0' : '0'
+    soloBarcodeMate = params.chemistry == 'GEX5' ? 1 : 0
+    fastq_1 = params.chemistry == 'GEX5' ? barcode_fastq : insert_fastq
+    fastq_2 = params.chemistry == 'GEX5' ? insert_fastq : barcode_fastq
 
     """
-    ${IONICE} STAR --soloBarcodeReadLength 0 --runThreadN 10 --outFileNamePrefix ${library}-${genome}. --genomeLoad NoSharedMemory --runRNGseed 789727 --readFilesCommand gunzip -c --outSAMattributes NH HI nM AS CR CY CB UR UY UB sM GX GN --genomeDir ${get_star_index(genome)} --outSAMtype BAM SortedByCoordinate --limitBAMsortRAM ${30000000000 + (10000000000 * task.attempt)} --outBAMsortingBinsN 200 --outSAMunmapped Within KeepPairs --sjdbGTFfile ${get_gtf(genome)} --soloType Droplet --soloUMIlen $soloUMIlen --soloFeatures Transcript3p Gene GeneFull GeneFull_ExonOverIntron GeneFull_Ex50pAS SJ Velocyto --soloMultiMappers Uniform PropUnique EM Rescue --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --soloCellFilter None --soloCBwhitelist ${params['barcode-whitelist']} --readFilesIn ${insert_fastq.join(',')} ${barcode_fastq.join(',')}
+    ${IONICE} STAR --soloBarcodeReadLength 0 --runThreadN 10 --outFileNamePrefix ${library}-${genome}. --genomeLoad NoSharedMemory --runRNGseed 789727 --readFilesCommand gunzip -c --outSAMattributes NH HI nM AS CR CY CB UR UY UB sM GX GN --genomeDir ${get_star_index(genome)} --outSAMtype BAM SortedByCoordinate --limitBAMsortRAM ${30000000000 + (10000000000 * task.attempt)} --outBAMsortingBinsN 200 --outSAMunmapped Within KeepPairs --sjdbGTFfile ${get_gtf(genome)} --soloType CB_UMI_Simple --soloUMIlen $soloUMIlen --soloFeatures Gene GeneFull GeneFull_ExonOverIntron GeneFull_Ex50pAS SJ --soloMultiMappers Uniform PropUnique EM Rescue --soloUMIfiltering MultiGeneUMI --soloCBmatchWLtype 1MM_multi_pseudocounts --soloCellFilter None --soloCBwhitelist ${params['barcode-whitelist']} --clip5pNbases ${clip5pNbases} --soloBarcodeMate ${soloBarcodeMate} --readFilesIn ${fastq_1.join(',')} ${fastq_2.join(',')}
     """
 
 }
@@ -95,8 +99,11 @@ process prune {
     output:
     tuple path("${library}-${genome}.before-dedup.bam"), path("${library}-${genome}.before-dedup.bam.bai")
 
+    script:
+    flags = params.chemistry == 'GEX5' ? '-f 3 -F 256 -F 2048' : '-F 4 -F 256 -F 2048'
+
     """
-    ${IONICE} samtools view -h -b -q 255 -F 4 -F 256 -F 2048 $bam > ${library}-${genome}.before-dedup.bam && samtools index ${library}-${genome}.before-dedup.bam
+    ${IONICE} samtools view -h -b -q 255 ${flags} $bam > ${library}-${genome}.before-dedup.bam && samtools index ${library}-${genome}.before-dedup.bam
     """
 
 }
