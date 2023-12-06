@@ -26,6 +26,7 @@ You may wish to run under nohup so that the pipeline continues to run in the bac
 
 ## Output
 * `dropkick/*`: Results of running dropkick per-library (QC plots, as well as per-barcode dropkick score that can be used for selecting quality barcodes for downstream analysis)
+* `cellbender/*`: Cellbender results
 * `multiqc/fastq/*`: multiqc summaries of fastqc results
 * `multiqc/star/*`: multiqc summaries of STAR logs
 * `prune/*`: filtered bam files (duplicates NOT removed)

@@ -255,6 +255,34 @@ process interactive_barcode_rank_plot {
 }
 
 
+process cellbender {
+
+    cpus 1
+    memory '40 GB'
+    publishDir "${params.results}/cellbender"
+    container 'docker://porchard/cellbender:0.3.0'
+    time '72h'
+    errorStrategy 'ignore'
+
+    input:
+    tuple val(library), val(genome), path(solo_out)
+
+    output:
+    path("${library}*")
+    path("${library}*.h5"), emit: h5_files
+
+    """
+    cp ${solo_out}/GeneFull_ExonOverIntron/raw/matrix.mtx matrix.mtx
+    cp ${solo_out}/GeneFull_ExonOverIntron/raw/features.tsv genes.tsv
+    cp ${solo_out}/GeneFull_ExonOverIntron/raw/barcodes.tsv barcodes.tsv
+
+    cellbender remove-background --cuda --epochs 150 --fpr 0.01 0.05 0.1 --input . --output ./${library}-${genome}.cellbender.h5
+    cp .command.log ${library}-${genome}.log
+    """
+
+}
+
+
 workflow {
 
     libraries = params.libraries.keySet()
@@ -282,5 +310,6 @@ workflow {
     prune(starsolo_out.for_prune)
     qc(starsolo_out.for_qc).combine(dropkick(starsolo_out.for_dropkick).dk_score, by: [0, 1]) | plot_qc
     interactive_barcode_rank_plot(starsolo_out.for_dropkick)
+    cellbender(starsolo_out.for_dropkick)
 
 }
