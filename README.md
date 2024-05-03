@@ -27,7 +27,6 @@ nextflow run -resume -params-file library-config.json --barcode-whitelist /path/
 
 ## Output
 * `cellbender/*`: Cellbender results
-* `dropkick/*`: Results of running dropkick per-library (QC plots, as well as per-barcode dropkick score that can be used for selecting quality barcodes for downstream analysis)
 * `multiqc/fastq/*`: multiqc summaries of fastqc results
 * `multiqc/star/*`: multiqc summaries of STAR logs
 * `prune/*`: filtered bam files (duplicates NOT removed)

@@ -12,11 +12,9 @@ import argparse
 parser = argparse.ArgumentParser(add_help=True)
 parser.add_argument('--prefix', default='qc.', help='Prefix for output files (default: "qc.")')
 parser.add_argument('rna_metrics', help='Path to file of RNA metrics')
-parser.add_argument('dropkick', help='Path to file of dropkick output')
 args = parser.parse_args()
 
 RNAQC_METRIC_FILE = args.rna_metrics
-DROPKICK = args.dropkick
 PREFIX = args.prefix
 
 @ticker.FuncFormatter
@@ -32,7 +30,6 @@ def read_count_formatter(x, pos):
 
 
 qc = pd.read_csv(RNAQC_METRIC_FILE, sep='\t')
-dropkick = pd.read_csv(DROPKICK, sep='\t')
 
 bulk_stats_no_barcodes = qc.loc[qc.barcode=='-',['total_reads', 'uniquely_mapped_reads']].sum().rename('value').reset_index().assign(grp='Reads w/o\nwhitelisted barcode')
 bulk_stats_whitelisted_barcodes = qc.loc[qc.barcode!='-',['total_reads', 'uniquely_mapped_reads']].sum().rename('value').reset_index().assign(grp='Reads w/\nwhitelisted barcode')
@@ -42,8 +39,7 @@ bulk_stats.stat = bulk_stats.stat.map({'total_reads': 'Total reads', 'uniquely_m
 cumulative = qc[(qc.barcode!='-') & (qc.umis>0)].sort_values('umis', ascending=False)
 cumulative['rnk'] = range(1, len(cumulative)+1)
 
-qc = qc[qc.barcode!='-'].merge(dropkick, how='left')
-qc.dropkick_score = qc.dropkick_score.fillna(0)
+qc = qc[qc.barcode!='-']
 
 # try to infer UMI threshold
 def estimate_threshold(x):
@@ -102,7 +98,7 @@ ax.legend()
 
 # UMIs vs fraction mitochondrial
 ax = axs[2]
-sns.scatterplot(x='umis', y='fraction_mitochondrial', hue='dropkick_score', data=qc, alpha=0.01, ax=ax)
+sns.scatterplot(x='umis', y='fraction_mitochondrial', data=qc, alpha=0.01, ax=ax)
 ax.set_xscale('log')
 ax.set_xlim(left=1)
 ax.axvline(UMI_THRESHOLD, color='red', ls='--')
@@ -112,7 +108,7 @@ ax.set_ylabel('Fraction mitochondrial')
 ax.grid(True)
 
 ax = axs[3]
-sns.scatterplot(x='umis', y='fraction_mitochondrial', hue='dropkick_score', data=qc, alpha=0.01, ax=ax)
+sns.scatterplot(x='umis', y='fraction_mitochondrial', data=qc, alpha=0.01, ax=ax)
 ax.set_xscale('log')
 ax.set_xlim(left=min([100, UMI_THRESHOLD*0.8]))
 ax.axvline(UMI_THRESHOLD, color='red', ls='--')
