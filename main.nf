@@ -176,7 +176,7 @@ process qc {
 
 
     """
-    qc-from-starsolo.py star.bam ${solo_out}/GeneFull/raw/matrix.mtx ${solo_out}/GeneFull/raw/barcodes.tsv > ${library}-${genome}.qc.txt
+    qc-from-starsolo.py star.bam ${solo_out}/GeneFull_ExonOverIntron/raw/matrix.mtx ${solo_out}/GeneFull_ExonOverIntron/raw/barcodes.tsv > ${library}-${genome}.qc.txt
     """
 
 }
