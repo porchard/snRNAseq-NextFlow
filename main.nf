@@ -284,5 +284,5 @@ workflow {
     qc(starsolo_out.for_qc) | plot_qc
     interactive_barcode_rank_plot(starsolo_out.solo_out)
     cellbender(starsolo_out.solo_out)
-
+    #emptyDrops code should go here because by default I'm using some metrics output from CellBender to guess the end of a cliff on the knee plot
 }
