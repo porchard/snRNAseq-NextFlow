@@ -1,9 +1,11 @@
+#!/usr/bin/env Rscript
+
 suppressPackageStartupMessages(library("DropletUtils"))
 library("optparse")
 
 option_list <- list(
     make_option(c("--donor"), type = "character", help = "[Required] Library ID."),
-    make_option(c("--barcodeList"), type = "character", help = "Absolute path containng matrix.txt, features.tsv and barcodes.tsv files."),
+    make_option(c("--barcodeList"), type = "character", help = "Path to directory containing matrix.txt, features.tsv and barcodes.tsv files."),
     make_option(c("--cbMetrics"), type = "character", help = "CellBender metrics file, often in the form *.cellbender_FPR_*_metrics.csv."),
     make_option(c("--lowerForKnee"), type = "integer", help = "[Required] Lower cut-off, used for EmptyDrops."),
     make_option(c("--outKnee"), type = "character", help = "File to save knee and inflection points."),

@@ -243,6 +243,7 @@ process cellbender {
     output:
     path("${library}*")
     path("${library}*.h5"), emit: h5_files
+    tuple val(library), val(genome), path("${library}-${genome}.cellbender_FPR_0.05_metrics.csv"), emit: metrics
 
     """
     cp ${solo_out}/GeneFull_ExonOverIntron/raw/matrix.mtx matrix.mtx
@@ -251,6 +252,28 @@ process cellbender {
 
     cellbender remove-background --cuda --epochs 150 --fpr 0.01 0.05 0.1 --input . --output ./${library}-${genome}.cellbender.h5
     cp .command.log ${library}-${genome}.log
+    """
+
+}
+
+
+process emptyDrops {
+
+    publishDir "${params.results}/emptyDrops"
+    container 'docker://porchard/dropletutils:20241202'
+    time '1h'
+    errorStrategy 'ignore'
+    memory '5 GB'
+
+    input:
+    tuple val(library), val(genome), path(solo_out), path(cellbender_metrics)
+
+    output:
+    path("${library}-${genome}.knee.txt")
+    path("${library}-${genome}.pass.txt")
+
+    """
+    emptyDrops_wCellBender.R --donor ${library} --barcodeList ${solo_out}/GeneFull_ExonOverIntron/raw --cbMetrics ${cellbender_metrics} --lowerForKnee 100 --outKnee ${library}-${genome}.knee.txt --outPass ${library}-${genome}.pass.txt
     """
 
 }
@@ -283,6 +306,7 @@ workflow {
     prune(starsolo_out.for_prune)
     qc(starsolo_out.for_qc) | plot_qc
     interactive_barcode_rank_plot(starsolo_out.solo_out)
-    cellbender(starsolo_out.solo_out)
-    #emptyDrops code should go here because by default I'm using some metrics output from CellBender to guess the end of a cliff on the knee plot
+    cellbender_out = cellbender(starsolo_out.solo_out)
+
+    starsolo_out.solo_out.combine(cellbender_out.metrics, by: [0,1]) | emptyDrops
 }
