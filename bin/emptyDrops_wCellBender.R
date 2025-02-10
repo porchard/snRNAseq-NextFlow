@@ -85,8 +85,7 @@ knee_inflection_rank <- function(m, lower=50, fit.bounds=NULL, exclude.from=50, 
     return(res)
 }
 
-endCliff <- function(m, inflection_rank, lowerForKnee=100, lowerRankForEndCliff=1000, fit.bounds=NULL, exclude.from=50, df=20) {
-    #lowerForKnee required to be the same as `lower` used in barcodeRanks(). lower is a numeric scalar specifying the lower bound on the total UMI count, at or below which all barcodes are assumed to correspond to empty droplets.
+endCliff <- function(m, inflection_rank, lowerRankForEndCliff, fit.bounds=NULL, df=20) {
     #lowerRankForEndCliff is max *rank* of the barcodes to include, and anything with higher *rank* is assumed to be empty droplets.
     ##Should use *rank* of barcodes around plateau points that can be obtained from CellBender. Note that lowerRankForEndCliff is *barcode rank*, which is different from lowerForKnee.
     
@@ -100,15 +99,15 @@ endCliff <- function(m, inflection_rank, lowerForKnee=100, lowerRankForEndCliff=
     run.totals <- stuff$values
 
     lower <- lowerRankForEndCliff
-    if (totals[lower] < 100) { #if cellbender predicts plateau points too low, force to find end_cliff above point with UMIs=100, assuming anything with UMIs < 100 are empty barcodes - to avoid discreteness
+    if (totals[o][lower] < 100) { #if cellbender predicts plateau points too low, force to find end_cliff above point with UMIs=100, assuming anything with UMIs < 100 are empty barcodes - to avoid discreteness
            plateau <- 100
            keep <- run.totals > plateau
-    } else if (totals[lower] > totals[inflection_rank]) {
+    } else if (totals[o][lower] > totals[o][inflection_rank]) {
 	    plateau <- 100
 	    keep <- run.totals > plateau
     } else
     {
-	    plateau <- totals[lower]
+	    plateau <- totals[o][lower]
 	    keep <- run.totals > plateau
     }
 
@@ -175,7 +174,7 @@ metrics <- read.csv(cbMetrics, header = F)
 colnames(metrics) <- c("metrics", "stats")
 lowerForEndCliff <- (metrics[metrics$metrics == "found_cells", "stats"] + metrics[metrics$metrics == "found_empties", "stats"])
 
-end_cliff <- endCliff(sce, inflection_rank = tmp$inflection_rank, lowerForKnee=lowerForKnee, lowerRankForEndCliff=lowerForEndCliff)
+end_cliff <- endCliff(sce, inflection_rank = tmp$inflection_rank, lowerRankForEndCliff=lowerForEndCliff)
 end_cliff <- as.data.frame(end_cliff)
 tmp <- cbind(tmp, end_cliff)
 write.table(tmp, outKnee, row.names = F, sep = "\t", quote = F)
