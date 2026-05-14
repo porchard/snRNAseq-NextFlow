@@ -9,6 +9,7 @@ Paths to reference files must be included in the `nextflow.config` file -- check
 
 1. STAR indices (compatible with STAR v. 2.7.9a)
 2. GTF files
+3. Chrom size files
 
 When launching the pipeline, as shown in the `nextflow` command below, you'll also need to set the following:
 
@@ -26,6 +27,7 @@ nextflow run -resume -params-file library-config.json --barcode-whitelist /path/
 ```
 
 ## Output
+* `bigwig/*`: Normalized RNA-seq coverage (bigWig) files
 * `cellbender/*`: Cellbender results
 * `multiqc/fastq/*`: multiqc summaries of fastqc results
 * `multiqc/star/*`: multiqc summaries of STAR logs

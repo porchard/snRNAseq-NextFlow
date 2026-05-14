@@ -12,7 +12,7 @@ def get_gtf (genome) {
 }
 
 def get_chrom_sizes (genome) {
-	return(get_star_index(genome) + '/chrNameLength.txt')
+	return(params.chrom_sizes[genome])
 }
 	
 def get_genome (library) {
@@ -279,6 +279,54 @@ process emptyDrops {
 }
 
 
+process make_bedgraphs {
+
+    memory '20 GB'
+    time '24h'
+    container 'library://porchard/default/general:20220107'
+    tag "${library} ${genome}"
+
+    input:
+    tuple val(library), val(genome), path(bam)
+
+    output:
+    tuple val(library), val(genome), path("${library}-${genome}.fwd.bdg"), emit: fwd_bdg
+    tuple val(library), val(genome), path("${library}-${genome}.rev.bdg"), emit: rev_bdg
+
+    """
+    make-scaled-and-stranded-bedgraphs.py --rev-strand-negative --scale-per-reads 1000000 $bam ${library}-${genome}
+    """
+
+}
+
+
+process make_bigwigs {
+
+    publishDir "${params.results}/bigwig"
+    memory '20 GB'
+    time '24h'
+    container 'library://porchard/default/general:20220107'
+    tag "${library} ${genome}"
+
+    input:
+    tuple val(library), val(genome), path(bedgraph)
+
+    output:
+    path("${prefix}.bw")
+
+    script:
+    prefix = bedgraph.getName().replaceAll('.bdg', '')
+
+    """
+    LC_COLLATE=C sort -k1,1 -k2n,2 $bedgraph | grep -w -P -e 'chr[\\dMXY]+' > sorted.bedgraph
+    bedClip sorted.bedgraph ${get_chrom_sizes(genome)} clipped.bedgraph
+    bedGraphToBigWig clipped.bedgraph ${get_chrom_sizes(genome)} ${prefix}.bw
+    rm sorted.bedgraph clipped.bedgraph
+    """
+
+}
+
+
 workflow {
 
     libraries = params.libraries.keySet()
@@ -309,4 +357,8 @@ workflow {
     cellbender_out = cellbender(starsolo_out.solo_out)
 
     starsolo_out.solo_out.combine(cellbender_out.metrics, by: [0,1]) | emptyDrops
+
+    bedgraphs = make_bedgraphs(starsolo_out.for_prune)
+    make_bigwigs(bedgraphs.fwd_bdg.mix(bedgraphs.rev_bdg))
+
 }
