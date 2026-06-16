@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 
 import os
-import sys
 import pysam
-import json
 import argparse
 import logging
-import numpy as np
 from scipy.io import mmread
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s: %(message)s')
@@ -144,6 +141,16 @@ def get_umis_per_barcode(mtx):
     return dict(zip(barcodes, umis_per_barcode.A.flatten()))
 
 
+def get_genes_per_barcode(mtx):
+    barcodes = []
+    barcodes_tsv = os.path.join(os.path.dirname(mtx), 'barcodes.tsv')
+    with open(barcodes_tsv, 'r') as f:
+        for line in f:
+            barcodes.append(line.rstrip())
+
+    mat = mmread(mtx)
+    genes_per_barcode = mat.count_nonzero(axis=0)
+    return dict(zip(barcodes, genes_per_barcode))
 
 
 if __name__ == '__main__':
@@ -157,7 +164,9 @@ if __name__ == '__main__':
     assert(list(gene_umis_per_barcode.keys()) == list(genefull_exonoverintron_umis_per_barcode.keys()))
     exon_full_gene_body_ratio = {barcode: gene_umis_per_barcode[barcode] / genefull_exonoverintron_umis_per_barcode[barcode] if genefull_exonoverintron_umis_per_barcode[barcode] > 0 else 0 for barcode in gene_umis_per_barcode}
 
-    
+    logging.info('Calculating genes per barcode')
+    genes_per_barcode = get_genes_per_barcode(args.genefull_exonoverintron_count_matrix)
+
     logging.info('Reading bam file')
     with pysam.AlignmentFile(args.bam, 'rb') as f:
         for read in f.fetch(until_eof=True):
@@ -175,6 +184,7 @@ if __name__ == '__main__':
     print_metrics = [
         'barcode',
         'umis',
+        'genes',
         'exon_to_full_gene_body_ratio',
         'secondary_alignments',
         'supplementary_alignments',
@@ -196,6 +206,7 @@ if __name__ == '__main__':
     for cell in cells.values():
         metrics = cell.gather_metrics()
         metrics['umis'] = genefull_exonoverintron_umis_per_barcode[metrics['barcode']] if metrics['barcode'] in genefull_exonoverintron_umis_per_barcode else 'NA'
+        metrics['genes'] = genes_per_barcode[metrics['barcode']] if metrics['barcode'] in genes_per_barcode else 'NA'
         metrics['exon_to_full_gene_body_ratio'] = exon_full_gene_body_ratio[metrics['barcode']] if metrics['barcode'] in exon_full_gene_body_ratio else 'NA'
         to_print = [str(metrics[i]) for i in print_metrics]
         print('\t'.join(to_print))

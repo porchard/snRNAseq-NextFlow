@@ -164,7 +164,7 @@ process qc {
     memory '25 GB'
     publishDir "${params.results}/qc"
     tag "${library}-${genome}"
-    container 'library://porchard/default/general:20220107'
+    container 'docker.io/porchard/topmed_scrna_calculate_qc_metrics:20260615'
     cpus 1
     time '5h'
 
