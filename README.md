@@ -27,6 +27,7 @@ nextflow run -resume -params-file library-config.json --barcode-whitelist /path/
 ```
 
 ## Output
+* `barcode-whitelist-matching/whitelist-matching.png`: Per-library summary of how well read barcodes match the barcode whitelist. It shows total and primary alignments, and the fraction of primary alignments where the raw barcode (CR) is on the whitelist, the corrected barcode (CB) is on the whitelist, and CR == CB. Use it to catch a wrong chemistry or whitelist.
 * `bigwig/*`: Normalized RNA-seq coverage (bigWig) files
 * `cellbender/*`: Cellbender results
 * `multiqc/fastq/*`: multiqc summaries of fastqc results

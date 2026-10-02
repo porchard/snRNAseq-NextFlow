@@ -205,6 +205,46 @@ process plot_qc {
 }
 
 
+process quantify_whitelist_matching {
+
+    tag "${library}-${genome}"
+    container 'library://porchard/default/general:20220107'
+    memory '3 GB'
+    time '5h'
+
+    input:
+    tuple val(library), val(genome), path(bam), path(whitelist)
+
+    output:
+    path("${library}___${genome}.whitelist-matching.tsv")
+
+    """
+    quantify-whitelist-matching.py $bam $whitelist > ${library}___${genome}.whitelist-matching.tsv
+    """
+
+}
+
+
+process plot_whitelist_matching {
+
+    publishDir "${params.results}/barcode-whitelist-matching"
+    container 'docker://porchard/general:20241111'
+    memory '5 GB'
+    time '1h'
+
+    input:
+    path(x)
+
+    output:
+    path("whitelist-matching.png")
+
+    """
+    plot-whitelist-matching.py --tsv ${x.join(' ')} --out whitelist-matching.png
+    """
+
+}
+
+
 process interactive_barcode_rank_plot {
 
     memory '15 GB'
@@ -330,6 +370,7 @@ process make_bigwigs {
 workflow {
 
     libraries = params.libraries.keySet()
+    whitelist = Channel.fromPath(params['barcode-whitelist'])
 
     fastq_in = []
     fastqc_in = []
@@ -353,6 +394,7 @@ workflow {
     star_multiqc(starsolo_out.for_multiqc.toSortedList())
     prune(starsolo_out.for_prune)
     qc(starsolo_out.for_qc) | plot_qc
+    quantify_whitelist_matching(starsolo_out.for_prune.combine(whitelist)).toSortedList() | plot_whitelist_matching
     interactive_barcode_rank_plot(starsolo_out.solo_out)
     cellbender_out = cellbender(starsolo_out.solo_out)
 
